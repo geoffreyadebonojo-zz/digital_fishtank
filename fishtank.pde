@@ -7,7 +7,7 @@ Swarm swarm;
 //the swarm object is a collection of all tadpoles
 //it lets them talk to one another. 
 
-Food[] foods = new Food[1000];
+Food[] foods = new Food[80];
 Feeder f1;
 Feeder f2;
 Feeder f3;
@@ -69,7 +69,7 @@ class Tadpole {
     mass=1;
     bodySize=mass*5;
 
-    maxSpeed= 2;
+    maxSpeed= random(1,1.2);
     jitterSpeed = 0.1;
 
     huntManyRange=100;
@@ -79,7 +79,8 @@ class Tadpole {
     maxForce= 0.05;
 
     foodCount= 0;
-    hunger= 0;
+    
+    hunger= 0.0;
     maxHunger= 5;
     linger= 2;
     
@@ -136,7 +137,9 @@ class Tadpole {
       huntMany();
       huntOne();
       eat();
-    }
+    } 
+    else
+    {}
   }    
 
 
@@ -165,11 +168,18 @@ class Tadpole {
 
   void update()
   {
-
+  float defaultValue = huntManyRange;
     velocity.add(acceleration);
-    velocity.limit(maxSpeed);
+    if (hunger > 0) {velocity.limit(maxSpeed * (6 / hunger )); huntManyRange = 300;}
+    else {velocity.limit(maxSpeed); huntManyRange = 200;}
     position.add(velocity);
     //acceleration.mult(accelerationMultiplier);
+    hunger += 0.01;
+
+    println(defaultValue, huntOneRange);
+    println(maxSpeed);
+    println(hunger);
+    println(foodCount);
   }
 
 // STEER METHOD  
@@ -314,6 +324,7 @@ void move()
   //s -- range from 0.1 to about 1, using random makes the paths more exploratory seeing
   acceleration= PVector.random2D();
   acceleration.mult(0.25);
+  
 };
 
 void huntOne()
@@ -366,7 +377,6 @@ void huntMany()
 
 void eat()
 { 
-  hunger+=0.01; 
 
   for (int i=0; i<foods.length; i++)
   {
@@ -375,12 +385,14 @@ void eat()
       foods[i].position.y= random(height); 
       foods[i].position.x = random(width);
       foodCount++;
+      println(foodCount);
       hunger-=foods[i].mass;
       bodySize+= 0.01; //should be separate method
-      maxSpeed += random(-0.01, 0.02);
-      huntOneRange += random(0.01, 0.1);
-      huntManyRange += 0.02;
-      desiredSep -= 1;
+      maxSpeed += random(-0.01, 0.05);
+      huntOneRange += random(0.1, 0.5);
+      huntManyRange += 0.2;
+      desiredSep += 1;
+
     }
   }
 }
@@ -410,7 +422,7 @@ void checkEdgesAlive()
 
 
 void setupSwarm() {
-  swarm = new Swarm();
+  swarm = new Swarm(); 
   for (int i = 0; i <tadpoles.length; i++) {
     swarm.addTadpole(new Tadpole(random((width/2) -25, (width/2) +25), random((height/2) -25, height/2 +25), tadpoles));
   }
@@ -603,8 +615,8 @@ class Feeder {
     pushMatrix();
     translate(position.x, position.y);
     rotate(angle);
-    noStroke();
-    fill(200, 200, 200, 50);
+    fill(200, 200, 200,  1);
+    //noFill();
     rectMode(CENTER);
     noStroke();
     ellipse(0,0,feedRange,feedRange);

@@ -28,3 +28,5 @@ The tadpoles only real governing forces are
 I've imagined the viewport as the pane of a fishtank, but I've also imagined it as a top-down view. If you want to get technical, the latter makes more sense, but only because the foods, when eaten or spoiled, reappear somewhere near the center of the field. So its like a steady rain of delicious red ellipses in varying sizes.
 
 An interesting note is that these particular settings don't scale, because of how the viewport works. I **could** go in an make it so it displays equally well on a (200,200) field as a (2000, 2000)... Or you could.
+
+I also want to point out that the Swarm class interaction is *closely* adapeted from an example of complex flocking behavior provided in the Processing.js docs. It's changed a lot since there, but the core mechanics owe a debt
