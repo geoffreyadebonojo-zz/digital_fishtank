@@ -1,13 +1,13 @@
 
 //the foods are affected by gravity
-PVector gravity = new PVector (0, 1);
+PVector gravity = new PVector (0, 0.6);
 Tadpole[] tadpoles = new Tadpole[0];
 
 Swarm swarm;
 //the swarm object is a collection of all tadpoles
 //it lets them talk to one another. 
 
-Food[] foods = new Food[100];
+Food[] foods = new Food[1000];
 Feeder f1;
 Feeder f2;
 Feeder f3;
@@ -175,8 +175,6 @@ class Tadpole {
     position.add(velocity);
     //acceleration.mult(accelerationMultiplier);
   }
-
-
 
 // STEER METHOD  
 PVector seek(PVector target)
@@ -378,11 +376,12 @@ void eat()
   {
     if (dist(position.x, position.y, foods[i].position.x, foods[i].position.y) < bodySize/2) 
     {
-      foods[i].position.y= random(height/2 - 100, height/2 + 100); 
-      foods[i].position.x = random(width/2 - 100, width/2 + 100);
+      foods[i].position.y= random(height); 
+      foods[i].position.x = random(width);
       foodCount++;
       hunger-=foods[i].mass;
-      bodySize+=0.01; //should be separate method
+      bodySize+= 0.01; //should be separate method
+      maxSpeed += 0.01;
     }
   }
 }
@@ -413,43 +412,37 @@ void checkEdgesAlive()
 
 void setupSwarm() {
   swarm = new Swarm();
-
   for (int i = 0; i <tadpoles.length; i++) {
-    
     swarm.addTadpole(new Tadpole(random((width/2) -25, (width/2) +25), random((height/2) -25, height/2 +25), tadpoles));
-
   }
 }
 
 
-  class Swarm {
-    ArrayList<Tadpole>tadpoles;
+class Swarm {
+  ArrayList<Tadpole>tadpoles;
 
-    Swarm() {
-      tadpoles = new ArrayList<Tadpole>();
-    }
+  Swarm() {tadpoles = new ArrayList<Tadpole>();}
 
-    void run() {
-      for (Tadpole t : tadpoles) {
-        t.run(tadpoles);
-      }
-    }
+  void run() {for (Tadpole t : tadpoles) {t.run(tadpoles);}}
 
-    void addTadpole(Tadpole t) {
-      tadpoles.add(t);
-    }
-  }
-
-void setupFoods()
-
-
-{
-  for (int i = 0; i<foods.length; i++) {
-    foods[i] = new Food(width, height, random(1,5));
+  void addTadpole(Tadpole t) {tadpoles.add(t);}
+  
+  void stats() {
+  
+  pushMatrix();
+  translate(200, 200);
+  fill(0);
+  textSize(50);
+  int num = tadpoles.size();
+  text(num, 0, 0);
+  popMatrix();
+  
   }
 }
 
-
+void setupFoods(){
+  for (int i = 0; i<foods.length; i++) {foods[i] = new Food(width, height, random(1,5));}
+}
 
 void makeFood(){
   for (int i =0; i<foods.length; i++){
@@ -460,11 +453,11 @@ void makeFood(){
     foods[i].jitter();
     foods[i].checkEdges();  
     foods[i].respawn();
-    foods[i].spoilTimer-=0.01;
+    foods[i].spoilTimer-=0.001;
   }
   
   if (foods[i].spoilTimer<=0) {
-    foods[i].spoilTimer=10;
+    foods[i].spoilTimer=20;
     foods[i].position.x=random(width);
     foods[i].position.y=random(height);
   }
@@ -501,7 +494,7 @@ class Food
     
     mass= imass;
     bodySize= 1+ mass;
-    initMaxSpeed = 2/bodySize; 
+    initMaxSpeed = bodySize; 
     maxSpeed = initMaxSpeed;
     spoilTimer = mass*2;
   }
@@ -547,7 +540,7 @@ class Food
   void checkEdges()
   {
     if (position.y > height) {
-      position.y = 1;
+      position.y = 0;
     }
   }
 
@@ -555,8 +548,8 @@ class Food
   void respawn() {
     if (position.x < 0 || position.x > width || position.y < 0 || position.y > height)
     {
-      position.y= width; 
-      position.x=height;
+      position.y= random(width); 
+      position.x= 0;
     }
   }
 }
@@ -574,6 +567,7 @@ class Feeder {
   float mass;
   float bodySize;
   float swingPower;
+  float changeDirection;
   
   
   Feeder(float ix, float iy)
@@ -582,12 +576,14 @@ class Feeder {
     y = iy;
     position = new PVector (x, y);
     velocity = new PVector (0, 0);
-    acceleration = new PVector (0, 0);
+    changeDirection = random(5);
+    changeDirection -= random(1);
+    acceleration = new PVector (random(-0.0001, 0.0001), random(-0.0001, 0.0001));
     angle=0;
-    feedRange=100;
+    feedRange=random(200,500);
     mass=5;
     bodySize=5;
-    swingPower= 1;
+    swingPower= 2;
   }
 
   void run()
@@ -603,11 +599,9 @@ class Feeder {
     translate(position.x, position.y);
     rotate(angle);
     noStroke();
-    fill(200, 200, 200, 100);
+    fill(200, 200, 200, 50);
     rectMode(CENTER);
-    //rect(0, 0, 5, 5);
     noStroke();
-    stroke(20,20,20,2);
     ellipse(0,0,feedRange,feedRange);
     popMatrix();
     noStroke();
@@ -622,7 +616,7 @@ class Feeder {
   
   void move()
   {
-   acceleration.add(0,1); 
+   acceleration.add(0,0); 
   }
 
   void suckFood()
@@ -641,7 +635,8 @@ class Feeder {
 
       if (dist<feedRange/2) {
         foods[i].acceleration.add(dir);
-        foods[i].maxSpeed = ((100/dist)+ swingPower)/foods[i].mass;
+        //                    80 is GOOD
+        foods[i].maxSpeed = ((80/dist)+ swingPower)/foods[i].mass;
       }else {
       foods[i].maxSpeed = foods[i].initMaxSpeed;
       }
@@ -673,30 +668,41 @@ void setup() {
 
 void draw()
 {
-  background(140, 168, 135, 20);
+  int i = 30; 
+  frameRate(i);
+  //background(100, 168, 200, 30);
+  background(100, 20);
   
   f1.run();
   f2.run();
   f3.run();
-  f4.run();
+  f4.run(); 
   
   makeFood();
-  
+  //swarm.stats();
   swarm.run();
   
 }
 
 void keyPressed(){
   if (key == CODED) {
-    if (keyCode == LEFT) {
+    if (keyCode == DOWN) {
       noLoop();
     }
-    if (keyCode == RIGHT) {
+    if (keyCode == UP) {
       loop();
+    }
+    if (keyCode == LEFT) {
+      frameRate(10);
+    }
+    if (keyCode == RIGHT) {
+      frameRate(20);
     }
   }
 }
 
 void mousePressed() {
+  
   swarm.addTadpole(new Tadpole(mouseX,mouseY,tadpoles));
+  
 }
