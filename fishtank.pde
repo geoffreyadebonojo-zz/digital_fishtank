@@ -12,7 +12,9 @@ Feeder f1;
 Feeder f2;
 Feeder f3;
 Feeder f4;
-
+Feeder f5;
+Feeder f6;
+Feeder f7;
 
 
 
@@ -49,13 +51,9 @@ class Tadpole {
   float maxHunger;
   float linger;
   float accelerationMultiplier;
-  
   color gender;
 
-
   Tadpole[] others; //class of others
-
-
 
   Tadpole (float x, float y, Tadpole[] oin) {
     others = oin;
@@ -75,7 +73,7 @@ class Tadpole {
     jitterSpeed = 0.1;
 
     huntManyRange=100;
-    huntOneRange=30;
+    huntOneRange=50;
     desiredSep= 80;
 
     maxForce= 0.05;
@@ -86,7 +84,6 @@ class Tadpole {
     linger= 2;
     
     accelerationMultiplier=0;
-    
     
   }
 
@@ -114,13 +111,14 @@ class Tadpole {
     fill(0, 0, 240);
     ellipse(0, 0, bodySize, bodySize);
     
-  fill(0,0,0,10);
-     noStroke();
-     ellipse(0,0,huntOneRange,huntOneRange);
-     strokeWeight(0.5);
-     stroke(0,255,0,40);
-     noFill();
-     ellipse(0,0,huntManyRange,huntManyRange);
+    fill(0,0,0,10);
+   noStroke();
+   fill(255, 255, 0, 10);
+   ellipse(0,0,huntOneRange,huntOneRange);
+   strokeWeight(0.5);
+   stroke(0,255,0,40);
+   fill(255, 255, 0, 2);
+   ellipse(0,0,huntManyRange,huntManyRange);
     
     popMatrix();
     a+=1;
@@ -138,9 +136,7 @@ class Tadpole {
       huntMany();
       huntOne();
       eat();
-
     }
-    
   }    
 
 
@@ -381,7 +377,10 @@ void eat()
       foodCount++;
       hunger-=foods[i].mass;
       bodySize+= 0.01; //should be separate method
-      maxSpeed += 0.01;
+      maxSpeed += random(-0.01, 0.02);
+      huntOneRange += random(0.01, 0.1);
+      huntManyRange += 0.02;
+      desiredSep -= 1;
     }
   }
 }
@@ -452,7 +451,7 @@ void makeFood(){
     foods[i].applyForce(gravity);
     foods[i].jitter();
     foods[i].checkEdges();  
-    foods[i].respawn();
+    //foods[i].respawn();
     foods[i].spoilTimer-=0.001;
   }
   
@@ -494,7 +493,7 @@ class Food
     
     mass= imass;
     bodySize= 1+ mass;
-    initMaxSpeed = bodySize; 
+    initMaxSpeed = bodySize/2; 
     maxSpeed = initMaxSpeed;
     spoilTimer = mass*2;
   }
@@ -533,25 +532,31 @@ class Food
   void jitter() {
     PVector jitter;
     jitter= PVector.random2D();
-    jitter.mult(4/bodySize);
+    jitter.mult(bodySize/10);
     acceleration.add(jitter);
   }
 
   void checkEdges()
   {
+    if (position.y < 0) {
+      position.y = height-1;
+    }
     if (position.y > height) {
-      position.y = 0;
+      position.y = 1;
+    }
+   
+   
+    if (position.x < 0) {
+      position.x = width-1; 
+    }
+    
+     if (position.x > width) {
+      position.x = 1;
     }
   }
 
 
-  void respawn() {
-    if (position.x < 0 || position.x > width || position.y < 0 || position.y > height)
-    {
-      position.y= random(width); 
-      position.x= 0;
-    }
-  }
+  
 }
 
 
@@ -576,7 +581,7 @@ class Feeder {
     y = iy;
     position = new PVector (x, y);
     velocity = new PVector (0, 0);
-    changeDirection = random(5);
+    changeDirection = random(2);
     changeDirection -= random(1);
     acceleration = new PVector (random(-0.0001, 0.0001), random(-0.0001, 0.0001));
     angle=0;
@@ -616,7 +621,8 @@ class Feeder {
   
   void move()
   {
-   acceleration.add(0,0); 
+   acceleration.add(0,0);
+   
   }
 
   void suckFood()
@@ -636,7 +642,7 @@ class Feeder {
       if (dist<feedRange/2) {
         foods[i].acceleration.add(dir);
         //                    80 is GOOD
-        foods[i].maxSpeed = ((80/dist)+ swingPower)/foods[i].mass;
+        foods[i].maxSpeed += ((80/dist)+ swingPower)/foods[i].mass;
       }else {
       foods[i].maxSpeed = foods[i].initMaxSpeed;
       }
@@ -662,13 +668,17 @@ void setup() {
   f2 = new Feeder (random(width),random(height));
   f3 = new Feeder (random(width),random(height));
   f4 = new Feeder (random(width),random(height));
+  f5 = new Feeder (random(width),random(height));
+  f6 = new Feeder (random(width),random(height));
+  f7 = new Feeder (random(width),random(height));
+  
 }
 
 
 
 void draw()
 {
-  int i = 30; 
+  int i = 30;  
   frameRate(i);
   //background(100, 168, 200, 30);
   background(100, 20);
@@ -677,6 +687,9 @@ void draw()
   f2.run();
   f3.run();
   f4.run(); 
+  f5.run();
+  f6.run();
+  f7.run(); 
   
   makeFood();
   //swarm.stats();
@@ -688,15 +701,20 @@ void keyPressed(){
   if (key == CODED) {
     if (keyCode == DOWN) {
       noLoop();
+      fill(0);
+      textSize(2);
+      rectMode(CENTER);
+      text("press up to resume", width/2, 60);
+      
     }
     if (keyCode == UP) {
       loop();
     }
     if (keyCode == LEFT) {
-      frameRate(10);
+      frameRate(5);
     }
     if (keyCode == RIGHT) {
-      frameRate(20);
+      frameRate(10);
     }
   }
 }
